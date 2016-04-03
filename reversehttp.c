@@ -244,26 +244,24 @@ int reversehttp_redirect(struct reversehttp_s *reversehttp,
     CURLcode res;
     curl_socket_t sockfd; /* socket */
     long sockextr;
-	size_t iolen = 0;
+    size_t iolen = 0;
 	
-	/* init connenting local host handle */
-	reversehttp->local_curl_handle = curl_easy_init();
+    /* init connenting local host handle */
+    reversehttp->local_curl_handle = curl_easy_init();
 	
-	CURL *curl = reversehttp->local_curl_handle;
+    CURL *curl = reversehttp->local_curl_handle;
 #ifdef __DEBUG__
-	curl_easy_setopt(reversehttp->local_curl_handle, CURLOPT_VERBOSE, 1);
+    curl_easy_setopt(reversehttp->local_curl_handle, CURLOPT_VERBOSE, 1);
 #endif
-    if(curl) 
-	{
-		puts(url);
+    if(curl) {
+        puts(url);
         curl_easy_setopt(curl, CURLOPT_URL, url);
         /* Do not do the transfer - only connect to host */
         curl_easy_setopt(curl, CURLOPT_CONNECT_ONLY, 1L);
         
         res = curl_easy_perform(curl);
 
-        if(CURLE_OK != res) 
-		{
+        if(CURLE_OK != res) {
             printf("Error: %s\n", strerror(res));
             return 1;
         }
@@ -273,54 +271,48 @@ int reversehttp_redirect(struct reversehttp_s *reversehttp,
          * curl_socket_t for sockets otherwise.
          */
         res = curl_easy_getinfo(curl, CURLINFO_LASTSOCKET, &sockextr);
-        if(CURLE_OK != res) 
-		{
+        if(CURLE_OK != res) {
             printf("Error: %s\n", curl_easy_strerror(res));
             return -1;
         }
 
         sockfd = sockextr;
 
-		/* wait for the socket to become ready for sending */
-		if(!wait_on_socket(sockfd, 0, 60000L))
-		{
-		  printf("Error: timeout.\n");
-		  return -1;
-		}	
+	/* wait for the socket to become ready for sending */
+	if(!wait_on_socket(sockfd, 0, 60000L)) {
+	    printf("Error: timeout.\n");
+	    return -1;
+	}	
 		
         puts("Sending request.");
-		puts(request_header);
-		size_t have_send = 0;
-		size_t send_len = strlen(request_header);
-		do
-		{
-			res = curl_easy_send(curl, request_header+have_send, send_len-have_send, &iolen);
-			if(CURLE_OK != res) 
-			{
-				PRINT_ERR("curl_easy_send:%s", curl_easy_strerror(res));
-				break;
-			}
-			have_send+=iolen;
-		}while(have_send<send_len);
-		PRINT_DEBUG("have send:%zu\n",have_send);
+	puts(request_header);
+	size_t have_send = 0;
+	size_t send_len = strlen(request_header);
+	do {
+	    res = curl_easy_send(curl, request_header+have_send, send_len-have_send, &iolen);
+	    if(CURLE_OK != res) 
+	    {
+		PRINT_ERR("curl_easy_send:%s", curl_easy_strerror(res));
+		break;
+	    }
+	    have_send+=iolen;
+	}while(have_send<send_len);
+	PRINT_DEBUG("have send:%zu\n",have_send);
 		
         puts("Reading response.");
         unsigned int buffer_size = 50 * 1024;
         unsigned int buffer_raise_step = 50 *1024;
         unsigned char *buffer = (unsigned char *)malloc(buffer_size); //50KB
         int copied = 0;
-		
-		
 
         /* read the response */
-        for(;;) 
-		{
-			unsigned char buf[1024];
-			wait_on_socket(sockfd, 1, 30000L);
-			res = curl_easy_recv(curl, buf, 1024, &iolen);
+        for(;;) {
+	    unsigned char buf[1024];
+	    wait_on_socket(sockfd, 1, 30000L);
+	    res = curl_easy_recv(curl, buf, 1024, &iolen);
             // PRINT_DEBUG("buf=%s\n",buf);
             if(CURLE_OK != res) 
-			{
+	    {
                 // PRINT_ERR("curl_easy_recv:%s", curl_easy_strerror(res));
                 break;
             }
@@ -340,11 +332,11 @@ int reversehttp_redirect(struct reversehttp_s *reversehttp,
             copied += iolen;
         }
         //PRINT_DEBUG("----------response:%s\n",buffer);
-		PRINT_DEBUG("----------------buffer---size=%d-------\n",copied);
-		/* save result */
-		*result = buffer;
-		*result_len = copied;
-		curl_easy_cleanup(curl);
+	PRINT_DEBUG("----------------buffer---size=%d-------\n",copied);
+	/* save result */
+	*result = buffer;
+	*result_len = copied;
+	curl_easy_cleanup(curl);
     }
 	
     return 0;
@@ -399,33 +391,35 @@ int http_get(struct reversehttp_s *reversehttp, char *url, struct curl_slist *he
 {
     CURL *curl;
     CURLcode res;
-	int ret = 0;
+    int ret = 0;
 	
     curl = curl_easy_init();
 	/* Set Callback functions */
-	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, capture_header);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, capture_body);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, capture_header);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, capture_body);
         
-	/* Set userpoint */    
-	curl_easy_setopt(curl, CURLOPT_HEADERDATA, reversehttp);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, reversehttp);
+    /* Set userpoint */    
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, reversehttp);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, reversehttp);
 	
 #ifdef __DEBUG__
-	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
 #endif
     while(curl) {
-        /* set URL to get */
-        curl_easy_setopt(curl, CURLOPT_URL, url);
+    
+    /* set URL to get */
+    curl_easy_setopt(curl, CURLOPT_URL, url);
 
-        /* Perform the request, res will get the return code */
-        res = curl_easy_perform(curl);
+    /* Perform the request, res will get the return code */
+    res = curl_easy_perform(curl);
+    
         /* Check for errors */
         if(res != CURLE_OK) {
-            PRINT_ERR("curl_easy_perform() failed: %s",
-                curl_easy_strerror(res));
-			ret = -1;
-			break;
-        }
+    	    PRINT_ERR("curl_easy_perform() failed: %s",
+    	    curl_easy_strerror(res));
+    	    ret = -1;
+    	    break;
+	}
     }
     /* always cleanup */
     curl_easy_cleanup(curl);
@@ -436,27 +430,25 @@ int http_get(struct reversehttp_s *reversehttp, char *url, struct curl_slist *he
 
 int reversehttp_get(struct reversehttp_s *reversehttp, 
 				    CURL *curl,
-					char *url)
+				    char *url)
 {
     CURLcode res;
 
-    if(curl) 
-	{
-		PRINT_DEBUG("get url:%s\n",url);
+    if(curl) {
+    	PRINT_DEBUG("get url:%s\n",url);
         /* set URL to get */
         curl_easy_setopt(curl, CURLOPT_URL, url);
-		curl_easy_setopt(curl, CURLOPT_POST, 0L);
-		curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "identity");
-		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, NULL);
+	curl_easy_setopt(curl, CURLOPT_POST, 0L);
+	curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "identity");
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, NULL);
 		
         /* Perform the request, res will get the return code */
         res = curl_easy_perform(curl);
         /* Check for errors */
-        if(res != CURLE_OK) 
-		{
+        if(res != CURLE_OK) {
             PRINT_ERR("curl_easy_perform() failed: %s",
-                curl_easy_strerror(res));
-			return -1;
+            curl_easy_strerror(res));
+	    return -1;
         }
     }
 
@@ -574,7 +566,7 @@ int http_redirect(struct reversehttp_s *reversehttp, const char *request)
 
 int http_get_loop(struct reversehttp_s *reversehttp)
 {
-	CURL *curl;
+    CURL *curl;
     CURLcode res;
 
     curl_socket_t sockfd; /* socket */
@@ -584,11 +576,11 @@ int http_get_loop(struct reversehttp_s *reversehttp)
 
     curl = curl_easy_init();
     if(curl) {
-		puts(reversehttp->next_request_url);
+	puts(reversehttp->next_request_url);
         curl_easy_setopt(curl, CURLOPT_URL, reversehttp->next_request_url);
         /* Do not do the transfer - only connect to host */
         curl_easy_setopt(curl, CURLOPT_CONNECT_ONLY, 1L);
-		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
         res = curl_easy_perform(curl);
 
         if(CURLE_OK != res) {
@@ -608,63 +600,65 @@ int http_get_loop(struct reversehttp_s *reversehttp)
         }
 
         sockfd = sockextr;
-		if(wait_on_socket(sockfd, 0, 60000L) < 0) {
-				PRINT_ERR("Error: timeout.");
-				return 1;
-			}
-		for(;;)
-		{
-			/* wait for the socket to become ready for sending */
-			
-			char *path = strstr(reversehttp->next_request_url, "/admin/");
-			char request[1024] = {0};
-			sprintf(request,"GET %s HTTP/1.1\r\nHost: 192.168.2.109:8000\r\nAccept-Encoding: identity\r\n\r\n",path);
-			puts("Sending request.");
-			puts(request);
-			/* Send the request. Real applications should check the iolen
-			 * to see if all the request has been sent */
-			printf("strlen(request)=%d\n",strlen(request));
-			res = curl_easy_send(curl, request, strlen(request), &iolen);
-			if(CURLE_OK != res) {
-				PRINT_ERR("curl_easy_send:%s", curl_easy_strerror(res));
-				return 1;
-			}
-			puts("Reading response.");
+	if(wait_on_socket(sockfd, 0, 60000L) < 0) {
+	    PRINT_ERR("Error: timeout.");
+	    return 1;
+	}
+	for(;;)
+	{
+	    /* wait for the socket to become ready for sending */
+	    char *path = strstr(reversehttp->next_request_url, "/admin/");
+	    char request[1024] = {0};
+	    sprintf(request,"GET %s HTTP/1.1\r\nHost: 192.168.2.109:8000\r\nAccept-Encoding: identity\r\n\r\n",path);
+	    puts("Sending request.");
+	    puts(request);
+	    
+	    /* Send the request. Real applications should check the iolen
+	     * to see if all the request has been sent */
+	     printf("strlen(request)=%d\n",strlen(request));
+	     res = curl_easy_send(curl, request, strlen(request), &iolen);
+	     if(CURLE_OK != res) {
+	      	PRINT_ERR("curl_easy_send:%s", curl_easy_strerror(res));
+		return 1;
+	     }
+	     puts("Reading response.");
+	     
+	     unsigned int buffer_size = 50 * 1024;
+	     unsigned int buffer_raise_step = 50 *1024;
+	     unsigned char *buffer = (unsigned char *)malloc(buffer_size); //50KB
+	     int copied = 0;
+	     wait_on_socket(sockfd, 1, 30000L);
+	     
+	     /* read the response */
+	     for(;;) {
+	     	unsigned char buf[1024];
+	     	
+	     	res = curl_easy_recv(curl, buf, 1024, &iolen);
+	     	// PRINT_DEBUG("buf=%s\n",buf);
+	     	if(CURLE_OK != res) {
+	     	    //PRINT_ERR("curl_easy_recv:%s", curl_easy_strerror(res));
+	     	    break;
+	     	}
 
-			unsigned int buffer_size = 50 * 1024;
-			unsigned int buffer_raise_step = 50 *1024;
-			unsigned char *buffer = (unsigned char *)malloc(buffer_size); //50KB
-			int copied = 0;
-			wait_on_socket(sockfd, 1, 30000L);
-			/* read the response */
-			for(;;) {
-				unsigned char buf[1024];
-				
-				res = curl_easy_recv(curl, buf, 1024, &iolen);
-				// PRINT_DEBUG("buf=%s\n",buf);
-				if(CURLE_OK != res) {
-					//PRINT_ERR("curl_easy_recv:%s", curl_easy_strerror(res));
-					break;
-				}
+                /* expend memory and copy old data */
+                if (copied + iolen > buffer_size) {
+		    unsigned char *tmp = buffer;
+		    unsigned int new_buffer_size = buffer_size + buffer_raise_step;
+		    buffer = (unsigned char *)malloc(new_buffer_size);
+		    memcpy(buffer,tmp,copied);
+		    buffer_size = new_buffer_size; //update buffer_size
+		    free(tmp);  
+                }
 
-				/* expend memory and copy old data */
-				if (copied + iolen > buffer_size) {
-					unsigned char *tmp = buffer;
-					unsigned int new_buffer_size = buffer_size + buffer_raise_step;
-					buffer = (unsigned char *)malloc(new_buffer_size);
-					memcpy(buffer,tmp,copied);
-					buffer_size = new_buffer_size; //update buffer_size
-					free(tmp);  
-				}
-
-				/* copy to buffer */    
-				memcpy(buffer+copied,buf,iolen);
-				copied += iolen;
-				printf("----------------buffer---size=%d-------\n",copied);
-			}
-			/* free buffer */
-			if (buffer)
-				free(buffer);
+		/* copy to buffer */    
+		memcpy(buffer+copied,buf,iolen);
+		copied += iolen;
+		printf("----------------buffer---size=%d-------\n",copied);
+	     }
+	     
+	     /* free buffer */
+	     if (buffer)
+	         free(buffer);
         }
         
 #if 0
@@ -677,7 +671,6 @@ int http_get_loop(struct reversehttp_s *reversehttp)
         curl_slist_free_all(chunk);
 #endif
 
-
         /* always cleanup */
         curl_easy_cleanup(curl);
     }
@@ -686,126 +679,116 @@ int http_get_loop(struct reversehttp_s *reversehttp)
 
 int routine(struct reversehttp_s *reversehttp )
 {
-	assert(reversehttp);
-	
-	int ret = 0;
-	char post_fields[64];
+    assert(reversehttp);
+    
+    int ret = 0;
+    char post_fields[64];
     int post_fields_len;
 	
-	post_fields_len = snprintf(post_fields,sizeof(post_fields),"name=%s&token=-", 
-        reversehttp->label);
-	/* main loop */
-	for(;;)
-	{
-		/* register vhost by using POST method */
-		if ( 0 != reversehttp_post(reversehttp,
-								  reversehttp->remote_curl_handle,
-								  reversehttp->endpoint,
-								  post_fields,
-								  post_fields_len,
-								  NULL) )
-		{
-			PRINT_ERR("reversehttp POST error,try again in 30secs later");
-			sleep(30);
-			continue;
-		}
-		
-		/* GET request forever */
-		for(;;)
-		{
-			if ( 0 != reversehttp_get(reversehttp,
-									 reversehttp->remote_curl_handle,
-									 reversehttp->next_request_url) )
-			{
-				PRINT_ERR("reversehttp GET, reset in 10secs later");
-				sleep(10);
-				break;
-			}
-			else
-			{
-				unsigned char *response = NULL;
-				size_t resp_len = 0;
-				if(reversehttp->need_repost_request)
-				{
-					reversehttp->need_repost_request = 0;
-					
-					/* get local host response */
-					if (0 != reversehttp_redirect(reversehttp,
-												 reversehttp->local_curl_handle,
-												 reversehttp->localhost_url,
-												 reversehttp->repost_request_header,
-												 &response,
-												 &resp_len) )
-					{
-						PRINT_ERR("reversehttp redirect error");
-						/* free buffer */
-						if (response)
-							free(response);
-						continue;
-					}
-					
-					if (resp_len>0)
-					{
-						/* post response to server */
-						struct curl_slist *chunk = NULL;
-						chunk = curl_slist_append(chunk, "Content-type: message/http");
-						chunk = curl_slist_append(chunk, "Expect:");
-						reversehttp_post(reversehttp,
-										reversehttp->remote_curl_handle,
-										reversehttp->next_request_url,
-										response,
-										resp_len,
-										chunk);
-
-						/* free the custom headers */
-						curl_slist_free_all(chunk);
-						
-						/* update next request url */
-						if (reversehttp->next_request_url) 
-							free(reversehttp->next_request_url);					
-						reversehttp->next_request_url = strdup(reversehttp->next_request_url_tmp);
-					}
-					
-					/* free buffers */
-					if (response)
-						free(response);
-					if (reversehttp->repost_request_header)
-					{
-						free(reversehttp->repost_request_header);
-						reversehttp->repost_request_header = NULL;
-					}						
-
-				} /*if need_repost_request*/
-			} /* if get request succeed */
-		}/* get loop */
-	} /* main loop */
-	
-	return ret;
+    post_fields_len = snprintf(post_fields,sizeof(post_fields),"name=%s&token=-", 
+    reversehttp->label);
+    /* main loop */
+    for(;;)
+    {
+    	/* register vhost by using POST method */
+    	if ( 0 != reversehttp_post(reversehttp,
+    	                           reversehttp->remote_curl_handle,
+    	                           reversehttp->endpoint,
+    	                           post_fields,
+    	                           post_fields_len,
+    	                           NULL) ) {
+    	    PRINT_ERR("reversehttp POST error,try again in 30secs later");
+    	    sleep(30);
+    	    continue;
+    	}
+    	
+    	/* GET request forever */
+    	for(;;) {
+    	    if ( 0 != reversehttp_get(reversehttp,
+    				      reversehttp->remote_curl_handle,
+    				      reversehttp->next_request_url) ) {
+    	        PRINT_ERR("reversehttp GET, reset in 10secs later");
+    	        sleep(10);
+    	        break;
+    				      	
+    	    } else {
+    		unsigned char *response = NULL;
+    		size_t resp_len = 0;
+    		if(reversehttp->need_repost_request) {
+    		    reversehttp->need_repost_request = 0;
+    		
+    		    /* get local host response */
+    		    if (0 != reversehttp_redirect(reversehttp,
+    						  reversehttp->local_curl_handle,
+    						  reversehttp->localhost_url,
+    						  reversehttp->repost_request_header,
+    						  &response,
+    						  &resp_len) ) {
+    		        PRINT_ERR("reversehttp redirect error");
+    			/* free buffer */
+    			if (response)
+    			    free(response);
+    			    
+    			continue;
+    		    }
+    				
+    	            if (resp_len>0) {
+    		        /* post response to server */
+    		        struct curl_slist *chunk = NULL;
+    		        chunk = curl_slist_append(chunk, "Content-type: message/http");
+    		        chunk = curl_slist_append(chunk, "Expect:");
+    		        reversehttp_post(reversehttp,
+    		        		     reversehttp->remote_curl_handle,
+    		        		     reversehttp->next_request_url,
+    		        		     response,
+    		        		     resp_len,
+    		        		     chunk);    
+    		        /* free the custom headers */
+    		        curl_slist_free_all(chunk);
+    		        
+    		        /* update next request url */
+    		        if (reversehttp->next_request_url) 
+    		        	free(reversehttp->next_request_url);	
+    		        	
+    		        reversehttp->next_request_url = strdup(reversehttp->next_request_url_tmp);
+    		    }
+    		    		
+    		    /* free buffers */
+    		    if (response)
+    		        free(response);
+    		    if (reversehttp->repost_request_header) {
+    		        free(reversehttp->repost_request_header);
+    		        reversehttp->repost_request_header = NULL;
+    		    }						    
+    		} /*if need_repost_request*/
+            } /* if get request succeed */
+    	}/* get loop */
+    } /* main loop */
+    
+    return ret;
 }
 
 int init_curl_handles(struct reversehttp_s *reversehttp)
 {
-	/* curl init CURL_GLOBAL_ALL */
+    /* curl init CURL_GLOBAL_ALL */
     curl_global_init(CURL_GLOBAL_ALL); 
  
-	int ret = 0;
+    int ret = 0;
 	
-	/* init connenting remote server handle */
+    /* init connenting remote server handle */
     reversehttp->remote_curl_handle = curl_easy_init();
-	/* Set Callback functions */
-	curl_easy_setopt(reversehttp->remote_curl_handle, CURLOPT_HEADERFUNCTION, capture_header);
-	curl_easy_setopt(reversehttp->remote_curl_handle, CURLOPT_WRITEFUNCTION, capture_body);
-        
-	/* Set userpoint */    
-	curl_easy_setopt(reversehttp->remote_curl_handle, CURLOPT_HEADERDATA, reversehttp);
-	curl_easy_setopt(reversehttp->remote_curl_handle, CURLOPT_WRITEDATA, reversehttp);
+    /* Set Callback functions */
+    curl_easy_setopt(reversehttp->remote_curl_handle, CURLOPT_HEADERFUNCTION, capture_header);
+    curl_easy_setopt(reversehttp->remote_curl_handle, CURLOPT_WRITEFUNCTION, capture_body);
+          
+    /* Set userpoint */    
+    curl_easy_setopt(reversehttp->remote_curl_handle, CURLOPT_HEADERDATA, reversehttp);
+    curl_easy_setopt(reversehttp->remote_curl_handle, CURLOPT_WRITEDATA, reversehttp);
 	
 #ifdef __DEBUG__
-	curl_easy_setopt(reversehttp->remote_curl_handle, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(reversehttp->remote_curl_handle, CURLOPT_VERBOSE, 1L);
 #endif
 
-
-
-	return ret;
+    return ret;
 }
 
