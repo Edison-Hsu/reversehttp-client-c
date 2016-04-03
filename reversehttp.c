@@ -33,7 +33,7 @@ static char * sub_strdup(const char *src, const char *start_flag, const char *en
             break;
 
         result = strndup(startp+strlen(start_flag),
-            endp-startp+1-strlen(start_flag)-strlen(end_flag));
+        endp-startp+1-strlen(start_flag)-strlen(end_flag));
     }while(0);
     
     return result;
@@ -158,8 +158,8 @@ static size_t capture_body( void *ptr, size_t size, size_t nmemb, void *userdata
     /* it's block. ##TODO: change to asyn */
     //http_redirect(reversehttp,request);
 	
-	reversehttp->repost_request_header = request;
-	reversehttp->need_repost_request = 1;
+    reversehttp->repost_request_header = request;
+    reversehttp->need_repost_request = 1;
 //    if(request)
 //        free(request);
 
@@ -195,11 +195,11 @@ static int wait_on_socket(curl_socket_t sockfd, int for_recv, long timeout_ms)
 }
 
 int reversehttp_post(struct reversehttp_s *reversehttp,
-					CURL *curl,
-					char *url,
-					void *body, 
-					size_t len, 
-					struct curl_slist *custom_headers)
+		     CURL *curl,
+		     char *url,
+		     void *body, 
+		     size_t len, 
+		     struct curl_slist *custom_headers )
 {
     CURLcode res;
 
@@ -216,15 +216,15 @@ int reversehttp_post(struct reversehttp_s *reversehttp,
         /* Need specify post data length, or default is strlen(body) */
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE_LARGE,(curl_off_t)len);
 
-			//printf("1231231231231=%p\n",custom_headers);
-		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, custom_headers);
+	//printf("custom_headers=%p\n",custom_headers);
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, custom_headers);
 		
         /* Perform the request, res will get the return code */
         res = curl_easy_perform(curl);
         /* Check for errors */
         if(res != CURLE_OK) {
             PRINT_ERR("curl_easy_perform() failed: %s\n",
-                curl_easy_strerror(res));
+            curl_easy_strerror(res));
             return -1;
         }
     }
@@ -235,11 +235,11 @@ int reversehttp_post(struct reversehttp_s *reversehttp,
 }
 
 int reversehttp_redirect(struct reversehttp_s *reversehttp, 
-						CURL *curl2,
-						char *url,
-						const char *request_header,
-						unsigned char **result,
-						size_t *result_len)
+			 CURL *curl2,
+			 char *url,
+			 const char *request_header,
+			 unsigned char **result,
+			 size_t *result_len)
 {
     CURLcode res;
     curl_socket_t sockfd; /* socket */
@@ -290,13 +290,12 @@ int reversehttp_redirect(struct reversehttp_s *reversehttp,
 	size_t send_len = strlen(request_header);
 	do {
 	    res = curl_easy_send(curl, request_header+have_send, send_len-have_send, &iolen);
-	    if(CURLE_OK != res) 
-	    {
+	    if(CURLE_OK != res) {
 		PRINT_ERR("curl_easy_send:%s", curl_easy_strerror(res));
 		break;
 	    }
 	    have_send+=iolen;
-	}while(have_send<send_len);
+	} while(have_send<send_len);
 	PRINT_DEBUG("have send:%zu\n",have_send);
 		
         puts("Reading response.");
@@ -311,8 +310,7 @@ int reversehttp_redirect(struct reversehttp_s *reversehttp,
 	    wait_on_socket(sockfd, 1, 30000L);
 	    res = curl_easy_recv(curl, buf, 1024, &iolen);
             // PRINT_DEBUG("buf=%s\n",buf);
-            if(CURLE_OK != res) 
-	    {
+            if(CURLE_OK != res) {
                 // PRINT_ERR("curl_easy_recv:%s", curl_easy_strerror(res));
                 break;
             }
@@ -394,7 +392,8 @@ int http_get(struct reversehttp_s *reversehttp, char *url, struct curl_slist *he
     int ret = 0;
 	
     curl = curl_easy_init();
-	/* Set Callback functions */
+    
+    /* Set Callback functions */
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, capture_header);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, capture_body);
         
@@ -406,20 +405,19 @@ int http_get(struct reversehttp_s *reversehttp, char *url, struct curl_slist *he
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
 #endif
     while(curl) {
+        /* set URL to get */
+        curl_easy_setopt(curl, CURLOPT_URL, url);
     
-    /* set URL to get */
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-
-    /* Perform the request, res will get the return code */
-    res = curl_easy_perform(curl);
-    
+        /* Perform the request, res will get the return code */
+        res = curl_easy_perform(curl);
+        
         /* Check for errors */
         if(res != CURLE_OK) {
-    	    PRINT_ERR("curl_easy_perform() failed: %s",
-    	    curl_easy_strerror(res));
-    	    ret = -1;
-    	    break;
-	}
+                PRINT_ERR("curl_easy_perform() failed: %s",
+                curl_easy_strerror(res));
+                ret = -1;
+                break;
+        }
     }
     /* always cleanup */
     curl_easy_cleanup(curl);
@@ -604,8 +602,7 @@ int http_get_loop(struct reversehttp_s *reversehttp)
 	    PRINT_ERR("Error: timeout.");
 	    return 1;
 	}
-	for(;;)
-	{
+	for(;;) {
 	    /* wait for the socket to become ready for sending */
 	    char *path = strstr(reversehttp->next_request_url, "/admin/");
 	    char request[1024] = {0};
@@ -688,8 +685,7 @@ int routine(struct reversehttp_s *reversehttp )
     post_fields_len = snprintf(post_fields,sizeof(post_fields),"name=%s&token=-", 
     reversehttp->label);
     /* main loop */
-    for(;;)
-    {
+    for(;;) {
     	/* register vhost by using POST method */
     	if ( 0 != reversehttp_post(reversehttp,
     	                           reversehttp->remote_curl_handle,
@@ -738,17 +734,17 @@ int routine(struct reversehttp_s *reversehttp )
     		        chunk = curl_slist_append(chunk, "Content-type: message/http");
     		        chunk = curl_slist_append(chunk, "Expect:");
     		        reversehttp_post(reversehttp,
-    		        		     reversehttp->remote_curl_handle,
-    		        		     reversehttp->next_request_url,
-    		        		     response,
-    		        		     resp_len,
-    		        		     chunk);    
+    		        		 reversehttp->remote_curl_handle,
+    		        		 reversehttp->next_request_url,
+    		        		 response,
+    		        		 resp_len,
+    		        		 chunk);    
     		        /* free the custom headers */
     		        curl_slist_free_all(chunk);
     		        
     		        /* update next request url */
     		        if (reversehttp->next_request_url) 
-    		        	free(reversehttp->next_request_url);	
+    		            free(reversehttp->next_request_url);	
     		        	
     		        reversehttp->next_request_url = strdup(reversehttp->next_request_url_tmp);
     		    }
